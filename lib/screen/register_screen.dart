@@ -1,30 +1,26 @@
-import "package:flutter/material.dart";
-import 'package:note_app/screen/home_screen.dart';
-import 'package:note_app/screen/register_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:note_app/services/firebase_auth_services.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   FirebaseAuthServices firebaseAuthServices = FirebaseAuthServices();
 
-  login() async {
+  register() async {
     firebaseAuthServices
-        .loginAccount(
+        .registerAccount(
             email: emailController.text, password: passwordController.text)
         .then((value) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(value!.user!.email.toString() + ' Login berhasil')));
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => HomeScreen(),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(value!.user!.email.toString() + 'success register'),
         ),
       );
     });
@@ -38,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              Text('login'),
+              Text('register'),
               SizedBox(
                 height: 30,
               ),
@@ -70,22 +66,18 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  login();
+                  register();
                 },
-                child: Text('Login'),
+                child: Text('Register'),
               ),
               SizedBox(
                 height: 10,
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => RegisterScreen(),
-                    ),
-                  );
+                  Navigator.of(context).pop();
                 },
-                child: Text('Belum punya akun? daftar disini'),
+                child: Text('Sudah punya akun? Logn disini'),
               ),
             ],
           ),
