@@ -1,7 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:feedback/feedback.dart';
+import 'package:flutter/foundation.dart';
 import "package:flutter/material.dart";
 import 'package:note_app/screen/home_screen.dart';
 import 'package:note_app/screen/register_screen.dart';
 import 'package:note_app/services/firebase_auth_services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -92,5 +99,57 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  Future<String> writeImageToStorage(Uint8List feedbackScreenshot) async {
+    final Directory output = await getTemporaryDirectory();
+    final String screenshotFilePath = '${output.path}/feedback.png';
+    final File screenshotFile = File(screenshotFilePath);
+    await screenshotFile.writeAsBytes(feedbackScreenshot);
+    return screenshotFilePath;
+  }
+
+  Future<void> createGitlabIssueFromFeedback(BuildContext context) async {
+    BetterFeedback.of(context).show((feedback) async {
+      const projectId = 'your-gitlab-project-id';
+      const apiToken = 'your-gitlab-api-token';
+
+      final screenshotFilePath = await writeImageToStorage(feedback.screenshot);
+
+      // Upload screenshot
+      final uploadRequest = http.MultipartRequest(
+        'POST',
+        Uri.https(
+          'gitlab.com',
+          '/api/v4/projects/$projectId/uploads',
+        ),
+      )
+        ..files.add(await http.MultipartFile.fromPath(
+          'file',
+          screenshotFilePath,
+        ))
+        ..headers.putIfAbsent('PRIVATE-TOKEN', () => apiToken);
+      final uploadResponse = await uploadRequest.send();
+
+      final dynamic uploadResponseMap = jsonDecode(
+        await uploadResponse.stream.bytesToString(),
+      );
+
+      // Create issue
+      await http.post(
+        Uri.https(
+          'gitlab.com',
+          '/api/v4/projects/$projectId/issues',
+          <String, String>{
+            'title': feedback.text.padRight(80),
+            'description': '${feedback.text}\n'
+                "${uploadResponseMap["markdown"] ?? "Missing image!"}",
+          },
+        ),
+        headers: {
+          'PRIVATE-TOKEN': apiToken,
+        },
+      );
+    });
   }
 }

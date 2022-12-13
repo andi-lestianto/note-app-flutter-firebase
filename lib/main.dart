@@ -1,3 +1,4 @@
+import 'package:feedback/feedback.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -10,7 +11,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Hive.initFlutter();
   var box = Hive.openBox('userBox');
-  runApp(const MyApp());
+  runApp(BetterFeedback(child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
