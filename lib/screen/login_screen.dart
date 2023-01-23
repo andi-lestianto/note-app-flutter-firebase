@@ -9,6 +9,7 @@ import 'package:note_app/screen/register_screen.dart';
 import 'package:note_app/services/firebase_auth_services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,18 +24,25 @@ class _LoginScreenState extends State<LoginScreen> {
   FirebaseAuthServices firebaseAuthServices = FirebaseAuthServices();
 
   login() async {
-    firebaseAuthServices
-        .loginAccount(
-            email: emailController.text, password: passwordController.text)
-        .then((value) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(value!.user!.email.toString() + ' Login berhasil')));
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => HomeScreen(),
-        ),
+    try {
+      firebaseAuthServices
+          .loginAccount(
+              email: emailController.text, password: passwordController.text)
+          .then((value) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(value!.user!.email.toString() + ' Login berhasil')));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => HomeScreen(),
+          ),
+        );
+      });
+    } catch (exception, stackTrace) {
+      await Sentry.captureException(
+        exception,
+        stackTrace: stackTrace,
       );
-    });
+    }
   }
 
   @override
